@@ -1,6 +1,6 @@
 <services>
-  <service name="format_spec_file" mode="manual" />
-  <service name="obs_scm" mode="manual">
+  <service name="format_spec_file" mode="buildtime" />
+  <service name="obs_scm" mode="buildtime">
     <param name="filename">duckdb</param>
     <param name="url">https://github.com/duckdb/duckdb.git</param>
     <param name="scm">git</param>
@@ -8,7 +8,7 @@
     <param name="versionformat">@PARENT_TAG@</param>
     <param name="versionrewrite-pattern">v(.*)</param>
   </service>
-  <service name="set_version" mode="manual" />
+  <service name="set_version" mode="buildtime" />
 
   <service name="tar" mode="buildtime" />
   <service name="recompress" mode="buildtime">
