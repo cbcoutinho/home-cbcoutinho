@@ -1,3 +1,11 @@
+main_workflow:
+  steps:
+    - branch_package:
+        source_project: home:cbcoutinho
+        source_package: duckdb
+        target_project: home:cbcoutinho:ci
+  filters:
+    event: pull_request
 rebuild_master:
   steps:
     - rebuild_package:
@@ -5,3 +13,6 @@ rebuild_master:
         package: duckdb
   filters:
     event: push
+    branches:
+      only:
+        - master
