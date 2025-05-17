@@ -1,0 +1,18 @@
+<services>
+  <service name="format_spec_file" mode="manual" />
+  <service name="obs_scm" mode="manual">
+    <param name="filename">duckdb</param>
+    <param name="url">https://github.com/duckdb/duckdb.git</param>
+    <param name="scm">git</param>
+    <param name="revision">v1.2.2</param>
+    <param name="versionformat">@PARENT_TAG@</param>
+    <param name="versionrewrite-pattern">v(.*)</param>
+  </service>
+  <service name="set_version" mode="manual" />
+
+  <service name="tar" mode="buildtime" />
+  <service name="recompress" mode="buildtime">
+    <param name="compression">gz</param>
+    <param name="file">*.tar</param>
+  </service>
+</services>
