@@ -7,7 +7,7 @@
     <param name="url">https://github.com/duckdb/duckdb.git</param>
     <param name="scm">git</param>
     <param name="revision">main</param>
-    <param name="versionformat">@PARENT_TAG@</param>
+    <param name="versionformat">1.2.2</param>
     <param name="versionrewrite-pattern">v(.*)</param>
     <!--<param name="extract">duckdb/duckdb.spec</param>-->
     <!--<param name="extract">duckdb/duckdb.changes</param>-->
