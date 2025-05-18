@@ -6,7 +6,7 @@
     <!--<param name="filename">duckdb</param>-->
     <param name="url">https://github.com/duckdb/duckdb.git</param>
     <param name="scm">git</param>
-    <param name="revision">v1.2.1</param>
+    <param name="revision">v1.2.2</param>
     <param name="versionformat">@PARENT_TAG@</param>
     <param name="versionrewrite-pattern">v(.*)</param>
     <!--<param name="extract">duckdb/duckdb.spec</param>-->
