@@ -7,18 +7,18 @@
     <param name="url">https://github.com/duckdb/duckdb.git</param>
     <param name="scm">git</param>
     <param name="revision">main</param>
-    <param name="versionformat">@PARENT_TAG@+@TAG_OFFSET@</param>
+    <param name="versionformat">@PARENT_TAG@</param>
     <param name="versionrewrite-pattern">v(.*)</param>
     <!--<param name="extract">duckdb/duckdb.spec</param>-->
     <!--<param name="extract">duckdb/duckdb.changes</param>-->
   </service>
   <!--<service name="extract_file" mode="buildtime">-->
-    <!--<param name="files">/duckdb/duckdb.spec</param>-->
+  <!--<param name="files">/duckdb/duckdb.spec</param>-->
   <!--</service>-->
   <service name="set_version"/>
   <service name="tar" mode="buildtime"/>
-  <!--<service name="recompress" mode="buildtime">-->
-  <!--<param name="compression">xz</param>-->
-  <!--<param name="file">*.tar</param>-->
-  <!--</service>-->
+  <service name="recompress" mode="buildtime">
+    <param name="compression">gz</param>
+    <param name="file">*.tar</param>
+  </service>
 </services>
