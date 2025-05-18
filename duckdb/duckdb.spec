@@ -17,7 +17,7 @@
 
 
 Name:           duckdb
-Version:        1.2.2
+Version:        1.2.1
 Release:        0
 Summary:        DuckDB is an analytical in-process SQL database management system
 License:        MIT

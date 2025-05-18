@@ -1,18 +1,24 @@
+<?xml version="1.0"?>
 <!-- vim: set ft=xml: -->
 <services>
   <!--<service name="format_spec_file"/>-->
   <service name="obs_scm">
-    <param name="filename">duckdb</param>
+    <!--<param name="filename">duckdb</param>-->
     <param name="url">https://github.com/duckdb/duckdb.git</param>
     <param name="scm">git</param>
-    <param name="revision">v1.2.2</param>
+    <param name="revision">v1.2.1</param>
     <param name="versionformat">@PARENT_TAG@</param>
     <param name="versionrewrite-pattern">v(.*)</param>
+    <!--<param name="extract">duckdb/duckdb.spec</param>-->
+    <!--<param name="extract">duckdb/duckdb.changes</param>-->
   </service>
+  <!--<service name="extract_file" mode="buildtime">-->
+  <!--<param name="files">/duckdb/duckdb.spec</param>-->
+  <!--</service>-->
   <service name="set_version"/>
   <service name="tar" mode="buildtime"/>
   <service name="recompress" mode="buildtime">
-    <param name="compression">xz</param>
+    <param name="compression">gz</param>
     <param name="file">*.tar</param>
   </service>
 </services>

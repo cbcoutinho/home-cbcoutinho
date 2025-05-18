@@ -3,9 +3,10 @@ main_workflow:
     - branch_package:
         source_project: home:cbcoutinho
         source_package: duckdb
-        target_project: home:cbcoutinho:ci
-    #- trigger_services:
-        #project:
+        target_project: home:cbcoutinho
+    - trigger_services:
+        project: home:cbcoutinho
+        package: duckdb
   filters:
     event: pull_request
 rebuild_master:
