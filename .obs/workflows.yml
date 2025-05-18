@@ -4,8 +4,9 @@ main_workflow:
         source_project: home:cbcoutinho
         source_package: duckdb
         target_project: home:cbcoutinho
-    #- trigger_services:
-        #project:
+    - trigger_services:
+        project: home:cbcoutinho
+        package: duckdb
   filters:
     event: pull_request
 rebuild_master:
