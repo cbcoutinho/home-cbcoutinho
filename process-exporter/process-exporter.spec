@@ -17,7 +17,7 @@
 
 
 Name:           process-exporter
-Version:        0.8.7
+Version:        0.8.5
 Release:        0
 Summary:        Prometheus exporter for process metrics
 License:        MIT

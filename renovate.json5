@@ -1,0 +1,33 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: ["config:recommended"],
+
+  // Each package directory pins its upstream release in _service, as the
+  // revision passed to obs_scm. Matching on that one line keeps this config
+  // generic: a new package needs no entry here, it just needs a _service that
+  // follows the same shape.
+  //
+  // Renovate can only rewrite the revision. The .obscpio, .obsinfo and
+  // vendor.tar.* artifacts committed next to it have to be regenerated, which
+  // the obs-refresh workflow does on top of Renovate's commit.
+  customManagers: [
+    {
+      customType: "regex",
+      managerFilePatterns: ["/(^|/)_service$/"],
+      matchStrings: [
+        '<param name="url">https://github\\.com/(?<depName>[^/]+/[^/<]+?)(\\.git)?</param>[\\s\\S]*?<param name="revision">refs/tags/(?<currentValue>[^<]+)</param>',
+      ],
+      datasourceTemplate: "github-tags",
+      versioningTemplate: "semver",
+    },
+  ],
+
+  // The artifact refresh and the OBS build both key off a single pull request,
+  // so upstream bumps are deliberately left ungrouped -- one package per PR.
+  packageRules: [
+    {
+      matchManagers: ["custom.regex"],
+      commitMessageTopic: "{{depName}}",
+    },
+  ],
+}
