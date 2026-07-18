@@ -1,0 +1,41 @@
+#!/bin/bash
+# Build a package's RPM locally, as a pre-merge sanity check.
+#
+# This stands in for the buildtime services OBS runs inside its build root:
+# it unpacks the committed .obscpio and repacks it as the source tarball the
+# spec expects, then calls rpmbuild. It is not a substitute for the real OBS
+# build -- that happens on the pull request via .obs/workflows.yml -- but it
+# catches a broken spec in seconds rather than minutes.
+#
+# Usage: tools/obs-build process-exporter
+set -euo pipefail
+
+pkgdir=$(realpath "${1%/}")
+name=$(basename "$pkgdir")
+version=$(sed -n 's/^version: *//p' "$pkgdir/$name.obsinfo")
+
+if [[ -z $version ]]; then
+    echo "$name: no version in $name.obsinfo -- run tools/obs-refresh first" >&2
+    exit 1
+fi
+
+topdir=$(mktemp -d)
+trap 'rm -rf "$topdir"' EXIT
+mkdir -p "$topdir"/{SOURCES,SPECS,BUILD,RPMS,SRPMS}
+
+# What the buildtime tar and recompress services would produce.
+mkdir "$topdir/unpack"
+(cd "$topdir/unpack" && cpio -idm --quiet) < "$pkgdir/$name-$version.obscpio"
+tar -czf "$topdir/SOURCES/$name-$version.tar.gz" -C "$topdir/unpack" "$name-$version"
+
+# Everything else the spec references comes straight from the package directory.
+find "$pkgdir" -maxdepth 1 -type f \
+    ! -name '*.obscpio' ! -name '*.obsinfo' ! -name '_service' \
+    -exec cp {} "$topdir/SOURCES/" \;
+cp "$pkgdir/$name.spec" "$topdir/SPECS/"
+
+rpmbuild --define "_topdir $topdir" -ba "$topdir/SPECS/$name.spec"
+
+echo
+echo "$name $version built:"
+find "$topdir/RPMS" -name '*.rpm' -printf '  %f\n'

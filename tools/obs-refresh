@@ -1,0 +1,149 @@
+#!/usr/bin/env python3
+"""Regenerate the committed OBS source artifacts for a package.
+
+Go builds on OBS run without network access, so module dependencies have to be
+vendored up front. obs-service-go_modules only supports "manual" mode, meaning
+it cannot run server side -- so the artifacts it and obs_scm produce
+(.obscpio, .obsinfo, vendor.tar.*) are committed to git, from where OBS picks
+them up via project level scmsync.
+
+Keeping those in sync with the revision pinned in _service is what this script
+is for: it runs every non-buildtime service a package declares, which is what
+`osc service manualrun` would do. osc is not usable here because it insists on
+either an osc checkout or git-obs metadata, and this repository is neither.
+
+Usage:
+    tools/obs-refresh process-exporter [...]
+    tools/obs-refresh --changelog process-exporter
+"""
+
+import argparse
+import os
+import pathlib
+import shutil
+import subprocess
+import tempfile
+import sys
+import time
+import xml.etree.ElementTree as ET
+
+SERVICE_DIR = pathlib.Path("/usr/lib/obs/service")
+
+# Produced by the services and committed alongside the spec.
+ARTIFACT_GLOBS = ("*.obscpio", "*.obsinfo", "vendor.tar.*")
+
+CHANGELOG_AUTHOR = os.environ.get(
+    "OBS_CHANGELOG_AUTHOR", "Chris Coutinho <chrisbcoutinho@gmail.com>"
+)
+
+
+def read_version(pkgdir):
+    """Return the version recorded in the .obsinfo, or None if not built yet."""
+    for obsinfo in pkgdir.glob("*.obsinfo"):
+        for line in obsinfo.read_text().splitlines():
+            if line.startswith("version:"):
+                return line.split(":", 1)[1].strip()
+    return None
+
+
+def services(pkgdir):
+    """Yield (name, [cli args]) for each service that does not run at buildtime.
+
+    Buildtime services (tar, recompress) are run by OBS inside the build root,
+    so they must not produce anything here.
+    """
+    root = ET.parse(pkgdir / "_service").getroot()
+    for service in root.findall("service"):
+        if service.get("mode") == "buildtime":
+            continue
+        args = []
+        for param in service.findall("param"):
+            # A param may legitimately repeat, e.g. exclude or replace.
+            args += ["--" + param.get("name"), (param.text or "").strip()]
+        yield service.get("name"), args
+
+
+def clean_artifacts(pkgdir):
+    for glob in ARTIFACT_GLOBS:
+        for stale in pkgdir.glob(glob):
+            stale.unlink()
+
+
+def refresh(pkgdir):
+    """Re-run the package's services and return (old version, new version)."""
+    old_version = read_version(pkgdir)
+    clean_artifacts(pkgdir)
+
+    for name, args in services(pkgdir):
+        script = SERVICE_DIR / name
+        if not script.exists():
+            sys.exit(
+                f"{name}: not installed at {script}. "
+                f"Install obs-service-{name} (or obs-service-obs_scm for obs_scm)."
+            )
+        print(f"==> {pkgdir.name}: {name}", flush=True)
+        # Services write to a staging directory and read from the working one;
+        # set_version refuses outright when the two are the same. Merging the
+        # results back after each service is what lets the next one see them --
+        # go_modules, for instance, autodetects the .obscpio obs_scm just made.
+        with tempfile.TemporaryDirectory() as staging:
+            subprocess.run(
+                [str(script), *args, "--outdir", staging], cwd=pkgdir, check=True
+            )
+            for produced in pathlib.Path(staging).iterdir():
+                shutil.copy2(produced, pkgdir / produced.name)
+
+    # obs_scm leaves its git clone behind; it is gitignored, but removing it
+    # keeps a second run from tripping over it.
+    clone = pkgdir / pkgdir.name
+    if clone.is_dir():
+        shutil.rmtree(clone)
+
+    return old_version, read_version(pkgdir)
+
+
+def add_changelog_entry(pkgdir, version):
+    changes = pkgdir / f"{pkgdir.name}.changes"
+    stamp = time.strftime("%a %b %e %H:%M:%S UTC %Y", time.gmtime())
+    entry = (
+        "-" * 67 + "\n"
+        f"{stamp} - {CHANGELOG_AUTHOR}\n"
+        "\n"
+        f"- Update to {version}\n"
+        "\n"
+    )
+    changes.write_text(entry + changes.read_text())
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("packages", nargs="+", help="package directories to refresh")
+    parser.add_argument(
+        "--changelog",
+        action="store_true",
+        help="prepend a .changes entry when the version changed",
+    )
+    args = parser.parse_args()
+
+    changed = False
+    for name in args.packages:
+        pkgdir = pathlib.Path(name.rstrip("/")).resolve()
+        if not (pkgdir / "_service").is_file():
+            sys.exit(f"{name}: no _service file, not an OBS package directory")
+
+        old_version, new_version = refresh(pkgdir)
+        if old_version == new_version:
+            print(f"{pkgdir.name}: artifacts refreshed at {new_version}")
+            continue
+
+        changed = True
+        print(f"{pkgdir.name}: {old_version} -> {new_version}")
+        if args.changelog:
+            add_changelog_entry(pkgdir, new_version)
+
+    # Signal "nothing moved" so CI can skip an empty commit.
+    return 0 if changed else 100
+
+
+if __name__ == "__main__":
+    sys.exit(main())

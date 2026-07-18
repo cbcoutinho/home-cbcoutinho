@@ -1,0 +1,78 @@
+# Regenerate the committed OBS artifacts after a version bump.
+#
+# Renovate can only rewrite the revision pinned in a package's _service file.
+# The .obscpio, .obsinfo and vendor.tar.* committed beside it are generated,
+# and OBS cannot regenerate them itself: builds there have no network access,
+# and obs-service-go_modules only runs in manual mode. So this workflow runs
+# the source services on the pull request and pushes the results onto it,
+# leaving a branch that OBS can build as-is once merged.
+name: Refresh OBS artifacts
+
+on:
+  pull_request:
+    paths:
+      - "*/_service"
+
+# Pushing with PERSONAL_ACCESS_TOKEN rather than GITHUB_TOKEN is deliberate:
+# commits made with GITHUB_TOKEN do not re-trigger workflows, and the OBS pull
+# request build needs to see the refreshed artifacts.
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    container:
+      image: opensuse/tumbleweed:latest
+    steps:
+      - name: Install packaging tooling
+        run: |
+          zypper --non-interactive --gpg-auto-import-keys refresh
+          zypper --non-interactive install --no-recommends \
+            git python3 go1.24 zstd cpio tar gzip \
+            rpm-build systemd-rpm-macros \
+            obs-service-obs_scm obs-service-set_version obs-service-go_modules
+
+      - uses: actions/checkout@v7
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Find packages with a changed revision
+        id: changed
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git fetch --quiet origin "${{ github.base_ref }}"
+          packages=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" \
+            | grep -E '^[^/]+/_service$' | cut -d/ -f1 | sort -u | tr '\n' ' ')
+          echo "packages=${packages}" >> "$GITHUB_OUTPUT"
+          echo "Changed packages: ${packages:-none}"
+
+      - name: Regenerate source and vendor artifacts
+        if: steps.changed.outputs.packages != ''
+        run: |
+          # obs-refresh exits 100 when the version did not actually move, which
+          # is not a failure -- it just means there is nothing to commit.
+          ./tools/obs-refresh --changelog ${{ steps.changed.outputs.packages }} \
+            || [ $? -eq 100 ]
+
+      - name: Verify the package still builds
+        if: steps.changed.outputs.packages != ''
+        run: |
+          for package in ${{ steps.changed.outputs.packages }}; do
+            ./tools/obs-build "$package"
+          done
+
+      - name: Commit refreshed artifacts
+        if: steps.changed.outputs.packages != ''
+        run: |
+          if git diff --quiet; then
+            echo "Artifacts already match the pinned revision, nothing to push."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A ${{ steps.changed.outputs.packages }}
+          git commit -m "Refresh OBS artifacts for ${{ steps.changed.outputs.packages }}"
+          git push origin "HEAD:${{ github.head_ref }}"
