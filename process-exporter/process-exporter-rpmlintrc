@@ -1,0 +1,3 @@
+# Go produces statically linked binaries by design; this build additionally
+# sets CGO_ENABLED=0 so the exporter can run in minimal environments.
+addFilter("statically-linked-binary")

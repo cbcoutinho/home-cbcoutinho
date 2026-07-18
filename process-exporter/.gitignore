@@ -1,0 +1,8 @@
+# Transient artifacts of `osc service manualrun` -- the git clone made by
+# obs_scm and the tarball produced by the buildtime tar/recompress services.
+# The generated .obscpio, .obsinfo and vendor.tar.zst ARE committed, because
+# the OBS project is sourced from this git repository via scmsync.
+/process-exporter/
+process-exporter-*.tar
+process-exporter-*.tar.gz
+.osc/

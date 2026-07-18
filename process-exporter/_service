@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!-- vim: set ft=xml: -->
+<services>
+  <!-- Fetch upstream sources into process-exporter-<version>.obscpio.
+       Run locally with `osc service manualrun`; the resulting .obscpio and
+       .obsinfo are committed to git, since this project is sourced from git
+       via scmsync. -->
+  <service name="obs_scm" mode="manual">
+    <param name="url">https://github.com/ncabatoff/process-exporter.git</param>
+    <param name="scm">git</param>
+    <param name="revision">refs/tags/v0.8.7</param>
+    <param name="versionformat">@PARENT_TAG@</param>
+    <param name="versionrewrite-pattern">v(.*)</param>
+    <param name="changesgenerate">disable</param>
+    <param name="exclude">.git</param>
+  </service>
+  <service name="set_version" mode="manual"/>
+  <!-- Vendor the Go module dependencies so the build works without network
+       access. go_modules only supports manual mode, so vendor.tar.zst is
+       generated locally and committed as well. -->
+  <service name="go_modules" mode="manual">
+    <param name="compression">zst</param>
+  </service>
+  <!-- Unpack the .obscpio into a tarball inside the build root. -->
+  <service name="tar" mode="buildtime"/>
+  <service name="recompress" mode="buildtime">
+    <param name="file">process-exporter-*.tar</param>
+    <param name="compression">gz</param>
+  </service>
+</services>
