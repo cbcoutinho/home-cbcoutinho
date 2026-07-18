@@ -1,0 +1,10 @@
+# Which top level directories OBS should treat as packages.
+#
+# home:cbcoutinho is sourced from this repository via project level scmsync,
+# and by default the scm bridge turns *every* top level directory into a
+# package -- which caught tools/ and would catch any future directory that is
+# not a package. Listing them explicitly keeps that from happening.
+#
+# Add an entry here when adding a package directory.
+packages:
+  - process-exporter
