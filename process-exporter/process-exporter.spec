@@ -24,6 +24,7 @@ License:        MIT
 URL:            https://github.com/ncabatoff/process-exporter
 Source0:        %{name}-%{version}.tar.gz
 Source1:        vendor.tar.zst
+Source100:      %{name}-rpmlintrc
 BuildRequires:  golang(API) >= 1.23
 BuildRequires:  systemd-rpm-macros
 BuildRequires:  zstd
