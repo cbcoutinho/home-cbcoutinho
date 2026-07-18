@@ -23,7 +23,7 @@ jobs:
   refresh:
     runs-on: ubuntu-latest
     container:
-      image: opensuse/tumbleweed:latest
+      image: docker.io/opensuse/tumbleweed:latest
     steps:
       - name: Install packaging tooling
         run: |
