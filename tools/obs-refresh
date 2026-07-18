@@ -12,6 +12,13 @@ is for: it runs every non-buildtime service a package declares, which is what
 `osc service manualrun` would do. osc is not usable here because it insists on
 either an osc checkout or git-obs metadata, and this repository is neither.
 
+Note that the vendor tarball is only reproducible for a given Go toolchain:
+`go mod vendor` output shifts between Go releases, so running this locally on
+a different Go than CI rewrites vendor.tar.* even when the version has not
+moved. Both trees build, it is churn rather than breakage, but it means the
+CI run is the authoritative one -- match its Go version (see
+.github/workflows/obs-refresh.yml) if you intend to commit the result.
+
 Usage:
     tools/obs-refresh process-exporter [...]
     tools/obs-refresh --changelog process-exporter
