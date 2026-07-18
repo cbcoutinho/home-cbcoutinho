@@ -1,13 +1,27 @@
 # OBS SCM/CI workflow integration.
 #
-# home:cbcoutinho is sourced from this repository via project level scmsync,
-# so pushes to master are picked up by OBS on their own. That makes the old
-# trigger_services and rebuild_package steps redundant: there are no server
-# side source services to run any more (the sources come from git), and the
-# sync already schedules a rebuild.
+# home:cbcoutinho is sourced from this repository via project level scmsync.
+# That does NOT mean OBS notices pushes by itself: the webhook does deliver
+# push events, but unless a workflow acts on one, nothing re-runs the scm
+# bridge and the project silently keeps building an old commit.
+# trigger_services is the step that re-syncs an scmsync package, so master
+# needs a job of its own.
 #
-# What is still worth automating is building a pull request before it lands,
-# which happens in a scratch project branched off home:cbcoutinho.
+# Note that trigger_services names a single package, so a new package needs
+# an entry here as well as in _manifest.
+sync_master:
+  steps:
+    - trigger_services:
+        project: home:cbcoutinho
+        package: process-exporter
+  filters:
+    event: push
+    branches:
+      only:
+        - master
+
+# Pull requests are built in a scratch project branched off home:cbcoutinho,
+# so a bump is verified against every configured repository before it lands.
 build_pull_request:
   steps:
     - branch_package:
