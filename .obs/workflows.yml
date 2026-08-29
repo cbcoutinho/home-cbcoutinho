@@ -7,16 +7,33 @@
 # trigger_services is the step that re-syncs an scmsync package, so master
 # needs a job of its own.
 #
-# Note that trigger_services names a single package, so a new package needs
-# an entry here as well as in _manifest.
+# ADDING A PACKAGE -- ORDER MATTERS. Every step below names one package, and
+# a step naming a package that does not exist in home:cbcoutinho fails the
+# WHOLE webhook delivery:
+#
+#   <status code="no_source_service_defined">
+#     Package home:cbcoutinho/gcx does not have a source service defined:
+#     package 'gcx' does not exist
+#   </status>
+#
+# so none of the other packages sync either. Adding the entry here at the same
+# time as the _manifest entry is therefore backwards, and broke master sync
+# once already (PR #20).
+#
+# The package list itself comes from _manifest, and only the PROJECT level scm
+# bridge acts on it -- the per package trigger_services below cannot create a
+# package. That bridge does not re-run on push, and has not re-run since the
+# project was set up: `tools` is still present despite _manifest dropping it.
+# So the sequence is:
+#
+#   1. Add the directory and its _manifest entry, and merge that.
+#   2. Kick the project bridge so OBS actually creates the package.
+#   3. Only then add the steps below.
 sync_master:
   steps:
     - trigger_services:
         project: home:cbcoutinho
         package: process-exporter
-    - trigger_services:
-        project: home:cbcoutinho
-        package: gcx
   filters:
     event: push
     branches:
@@ -30,14 +47,6 @@ build_pull_request:
     - branch_package:
         source_project: home:cbcoutinho
         source_package: process-exporter
-        target_project: home:cbcoutinho
-    # gcx cannot be branched until the package exists in home:cbcoutinho, which
-    # only happens once this lands on master and the scm bridge creates it. So
-    # this step fails on the pull request that adds the package, and works on
-    # every one after it.
-    - branch_package:
-        source_project: home:cbcoutinho
-        source_package: gcx
         target_project: home:cbcoutinho
   filters:
     event: pull_request
