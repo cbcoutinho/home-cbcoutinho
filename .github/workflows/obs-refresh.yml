@@ -29,7 +29,7 @@ jobs:
         run: |
           zypper --non-interactive --gpg-auto-import-keys refresh
           zypper --non-interactive install --no-recommends \
-            git python3 go1.24 zstd cpio tar gzip \
+            git python3 go1.26 zstd cpio tar gzip \
             rpm-build systemd-rpm-macros \
             obs-service-obs_scm obs-service-set_version obs-service-go_modules
 
