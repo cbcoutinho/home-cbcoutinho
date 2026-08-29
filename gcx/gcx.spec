@@ -70,6 +70,11 @@ install -D -m0644 %{name}.fish %{buildroot}%{_datadir}/fish/vendor_completions.d
 %license LICENSE
 %doc README.md CHANGELOG.md
 %{_bindir}/%{name}
+# The completion directories are owned here as well: nothing guarantees bash,
+# zsh or fish is installed in a minimal build root, and an unowned directory
+# is an rpmlint error.
+%dir %{_datadir}/bash-completion
+%dir %{_datadir}/bash-completion/completions
 %{_datadir}/bash-completion/completions/%{name}
 %dir %{_datadir}/zsh
 %dir %{_datadir}/zsh/site-functions
