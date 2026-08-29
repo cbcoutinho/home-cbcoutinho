@@ -14,6 +14,9 @@ sync_master:
     - trigger_services:
         project: home:cbcoutinho
         package: process-exporter
+    - trigger_services:
+        project: home:cbcoutinho
+        package: gcx
   filters:
     event: push
     branches:
@@ -27,6 +30,14 @@ build_pull_request:
     - branch_package:
         source_project: home:cbcoutinho
         source_package: process-exporter
+        target_project: home:cbcoutinho
+    # gcx cannot be branched until the package exists in home:cbcoutinho, which
+    # only happens once this lands on master and the scm bridge creates it. So
+    # this step fails on the pull request that adds the package, and works on
+    # every one after it.
+    - branch_package:
+        source_project: home:cbcoutinho
+        source_package: gcx
         target_project: home:cbcoutinho
   filters:
     event: pull_request
