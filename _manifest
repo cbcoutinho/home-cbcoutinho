@@ -8,3 +8,4 @@
 # Add an entry here when adding a package directory.
 packages:
   - process-exporter
+  - gcx
