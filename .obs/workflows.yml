@@ -22,18 +22,24 @@
 #
 # The package list itself comes from _manifest, and only the PROJECT level scm
 # bridge acts on it -- the per package trigger_services below cannot create a
-# package. That bridge does not re-run on push, and has not re-run since the
-# project was set up: `tools` is still present despite _manifest dropping it.
-# So the sequence is:
+# package. That bridge runs on a master push that OBS accepts, and honours
+# _manifest in both directions: merging PR #21 created gcx and dropped the
+# stale tools package in the same push. So adding a package is two merges:
 #
-#   1. Add the directory and its _manifest entry, and merge that.
-#   2. Kick the project bridge so OBS actually creates the package.
-#   3. Only then add the steps below.
+#   1. Add the directory and its _manifest entry, and merge that. The master
+#      push creates the package on OBS -- confirm with `osc results`.
+#   2. Only then add the steps below, in a second pull request.
+#
+# Doing both at once is what broke sync in PR #20: the steps referenced a
+# package that the very same push had not created yet.
 sync_master:
   steps:
     - trigger_services:
         project: home:cbcoutinho
         package: process-exporter
+    - trigger_services:
+        project: home:cbcoutinho
+        package: gcx
   filters:
     event: push
     branches:
@@ -47,6 +53,10 @@ build_pull_request:
     - branch_package:
         source_project: home:cbcoutinho
         source_package: process-exporter
+        target_project: home:cbcoutinho
+    - branch_package:
+        source_project: home:cbcoutinho
+        source_package: gcx
         target_project: home:cbcoutinho
   filters:
     event: pull_request
