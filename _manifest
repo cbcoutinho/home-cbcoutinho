@@ -5,7 +5,9 @@
 # package -- which caught tools/ and would catch any future directory that is
 # not a package. Listing them explicitly keeps that from happening.
 #
-# Add an entry here when adding a package directory.
+# Add an entry here when adding a package directory -- and read "Adding a
+# package" in README.md first: it takes two merges, and doing it in one breaks
+# syncing for every package in the project.
 packages:
   - process-exporter
   - gcx
