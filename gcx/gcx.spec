@@ -17,7 +17,7 @@
 
 
 Name:           gcx
-Version:        1.6.0
+Version:        1.8.0
 Release:        0
 Summary:        Command line interface for Grafana
 License:        Apache-2.0
@@ -25,7 +25,7 @@ URL:            https://github.com/grafana/gcx
 Source0:        %{name}-%{version}.tar.gz
 Source1:        vendor.tar.zst
 Source100:      %{name}-rpmlintrc
-BuildRequires:  golang(API) >= 1.26
+BuildRequires:  golang(API) >= 1.27
 BuildRequires:  zstd
 
 %description

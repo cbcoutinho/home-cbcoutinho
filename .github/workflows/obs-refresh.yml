@@ -29,7 +29,7 @@ jobs:
         run: |
           zypper --non-interactive --gpg-auto-import-keys refresh
           zypper --non-interactive install --no-recommends \
-            git python3 go1.26 zstd cpio tar gzip \
+            git python3 go zstd cpio tar gzip \
             rpm-build systemd-rpm-macros \
             obs-service-obs_scm obs-service-set_version obs-service-go_modules
 
@@ -70,6 +70,14 @@ jobs:
           if git diff --quiet; then
             echo "Artifacts already match the pinned revision, nothing to push."
             exit 0
+          fi
+          # Our own push re-triggers this workflow. If the previous commit was
+          # already a refresh and the artifacts still differ, the output is not
+          # reproducible -- pushing again would loop forever.
+          if [ "$(git log -1 --format=%an)" = "github-actions[bot]" ]; then
+            git diff --stat
+            echo "::error::Artifacts differ from the previous refresh; output is not reproducible."
+            exit 1
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
