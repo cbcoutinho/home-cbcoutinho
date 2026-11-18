@@ -25,7 +25,7 @@ URL:            https://github.com/grafana/gcx
 Source0:        %{name}-%{version}.tar.gz
 Source1:        vendor.tar.zst
 Source100:      %{name}-rpmlintrc
-BuildRequires:  golang(API) >= 1.26
+BuildRequires:  golang(API) >= 1.27
 BuildRequires:  zstd
 
 %description
