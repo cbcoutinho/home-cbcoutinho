@@ -106,7 +106,32 @@ def refresh(pkgdir):
     if clone.is_dir():
         shutil.rmtree(clone)
 
+    for vendor in pkgdir.glob("vendor.tar.*"):
+        normalize_tarball(vendor)
+
     return old_version, read_version(pkgdir)
+
+
+def normalize_tarball(path):
+    """Repack a tarball with a stable member order.
+
+    go_modules adds files in filesystem (readdir) order, so identical vendor
+    trees produce different bytes from run to run. In CI every such diff got
+    committed and pushed, which re-triggered the workflow, forever. The member
+    mtimes come from the upstream commit, except for parent directories the
+    archive has no entry for: extraction creates those "now", so everything is
+    clamped to the newest top-level entry's (upstream) mtime.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        subprocess.run(["tar", "-xaf", path, "-C", tmp], check=True)
+        top = sorted(os.listdir(tmp))
+        mtime = max(int(os.stat(os.path.join(tmp, t)).st_mtime) for t in top)
+        subprocess.run(
+            ["tar", "--sort=name", "--owner=0", "--group=0", "--numeric-owner",
+             "--format=gnu", f"--mtime=@{mtime}", "--clamp-mtime",
+             "-caf", path, "-C", tmp, *top],
+            check=True,
+        )
 
 
 def add_changelog_entry(pkgdir, version):
