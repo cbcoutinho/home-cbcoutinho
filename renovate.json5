@@ -1,6 +1,6 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
-  extends: ["config:recommended"],
+  extends: ["config:best-practices"],
 
   // Each package directory pins its upstream release in _service, as the
   // revision passed to obs_scm. Matching on that one line keeps this config
