@@ -8,8 +8,11 @@
   <service name="obs_scm" mode="manual">
     <param name="url">https://github.com/grafana/gcx.git</param>
     <param name="scm">git</param>
-    <param name="revision">refs/tags/v1.8.0</param>
+    <param name="revision">refs/tags/v1.9.1</param>
     <param name="versionformat">@PARENT_TAG@</param>
+    <!-- Upstream also tags experimental/sandbox/v*; on a shared commit
+         git describe can pick that, so only consider release tags. -->
+    <param name="match-tag">v*</param>
     <param name="versionrewrite-pattern">v(.*)</param>
     <param name="changesgenerate">disable</param>
     <param name="exclude">.git</param>
