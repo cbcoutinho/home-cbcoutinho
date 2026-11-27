@@ -17,7 +17,7 @@
 
 
 Name:           gcx
-Version:        1.8.0
+Version:        1.9.1
 Release:        0
 Summary:        Command line interface for Grafana
 License:        Apache-2.0
