@@ -23,7 +23,7 @@ jobs:
   refresh:
     runs-on: ubuntu-latest
     container:
-      image: docker.io/opensuse/tumbleweed:latest
+      image: docker.io/opensuse/tumbleweed:latest@sha256:29f6d6092553ac2b84771a254b2cdb8ba52ad35ed4db5119d9c5f0ee17ae187f
     steps:
       - name: Install packaging tooling
         run: |
@@ -33,7 +33,7 @@ jobs:
             rpm-build systemd-rpm-macros \
             obs-service-obs_scm obs-service-set_version obs-service-go_modules
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           ref: ${{ github.head_ref }}
